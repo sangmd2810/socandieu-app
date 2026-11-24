@@ -395,6 +395,7 @@ const trashIds = () => Object.keys(slips).filter(id => slips[id].daXoa);
 const isAuto = s => s.giaUSD > 0 && s.tyGia > 0;            // Đơn giá ₫ = tỷ giá × đơn giá USD
 const isAutoName = s => !!(s.loai || s.ncc);
 const autoName = s => [s.loai, s.ncc, s.giaUSD ? String(s.giaUSD).replace('.', ',') : '', s.tyGia ? String(s.tyGia) : ''].filter(Boolean).join('-');
+const fmtBi = v => Number(v).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:3});   // bì/bao: tới 3 số lẻ
 const fmtGia = v => fmt(v, Number.isInteger(v) ? 0 : 2);
 function fixBao(s){ if (!Array.isArray(s.baoLan)) s.baoLan = []; while (s.baoLan.length < s.can.length) s.baoLan.push(null); s.baoLan.length = s.can.length; return s; }
 const baoAt = (s,i) => (s.baoLan && s.baoLan[i] != null) ? s.baoLan[i] : defBao(s);
@@ -502,7 +503,7 @@ function renderSum(){
   $('sum').innerHTML = `
     <div class="row"><span class="k">Ngày tạo</span><span class="v num">${d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} ${d.toLocaleDateString('vi-VN')}</span></div>
     <div class="row"><span class="k">Khối lượng cả bì · ${c.n} lần cân</span><span class="v num">${fmt(c.gross/1000,3)} kg</span></div>
-    <div class="row"><span class="k">Bì: ${c.bags} bao × ${fmt(s.biMoiBao||0,2)} kg</span><span class="v num">− ${fmt(c.tare/1000,3)} kg</span></div>
+    <div class="row"><span class="k">Bì: ${c.bags} bao × ${fmtBi(s.biMoiBao||0)} kg</span><span class="v num">− ${fmt(c.tare/1000,3)} kg</span></div>
     <div class="row net"><span class="k">Khối lượng tịnh</span><span class="v num">${fmt(c.net/1000,3)} kg</span></div>
     <div class="row"><span class="k">Đơn giá${isAuto(s) ? ` · ${fmt(s.giaUSD,2)} USD × ${fmt(s.tyGia,0)}` : ''}</span><span class="v num">${fmtGia(s.donGia||0)} ₫/kg</span></div>
     ${s.taoBoi ? `<div class="row who"><span class="k">Người tạo${s.suaBoi && s.suaBoi!==s.taoBoi ? ' · sửa gần nhất' : ''}</span><span class="v">${esc(nm(s.taoBoi))}${s.suaBoi && s.suaBoi!==s.taoBoi ? ' · ' + esc(nm(s.suaBoi)) : ''}${s.updatedAt ? ` <small class="num" style="color:var(--muted)">${new Date(s.updatedAt).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'})} ${new Date(s.updatedAt).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'})}</small>` : ''}</span></div>` : ''}
@@ -705,7 +706,7 @@ function summaryText(){
   const s = cur(), c = calc(s), d = new Date(s.taoLuc);
   return [`${s.ten||'Phiếu cân'} — ${d.toLocaleDateString('vi-VN')}`,
     `KL cả bì: ${fmt(c.gross/1000,3)} kg (${c.n} lần cân)`,
-    `Bì: ${c.bags} bao × ${fmt(s.biMoiBao||0,2)} = ${fmt(c.tare/1000,3)} kg`,
+    `Bì: ${c.bags} bao × ${fmtBi(s.biMoiBao||0)} = ${fmt(c.tare/1000,3)} kg`,
     `KL tịnh: ${fmt(c.net/1000,3)} kg`,
     `Đơn giá: ${isAuto(s) ? `${fmt(s.giaUSD,2)} USD × ${fmt(s.tyGia,0)} = ` : ''}${fmtGia(s.donGia||0)} ₫/kg`,
     `Thành tiền: ${fmt(c.money,2)} ₫`].join('\n');
@@ -753,7 +754,7 @@ function pageHTML(s, c, blocks, pi, pn){
     <table class="pp-info">
       <tr><td>Tên</td><td>${esc(s.ten||'')}</td><td>Ngày tạo</td><td class="n">${when}</td></tr>
       <tr><td>Đơn giá</td><td class="n">${isAuto(s) ? `${fmt(s.giaUSD,2)} USD × ${fmt(s.tyGia,0)} = ` : ''}${fmtGia(s.donGia||0)} ₫/kg</td><td>Số bao mỗi lần cân</td><td class="n">${s.baoMoiLan}</td></tr>
-      <tr><td>KL cả bì</td><td class="n">${fmt(c.gross/1000,3)} kg</td><td>Số bao bì</td><td class="n">${c.bags} × ${fmt(s.biMoiBao||0,2)} kg = ${fmt(c.tare/1000,3)} kg</td></tr>
+      <tr><td>KL cả bì</td><td class="n">${fmt(c.gross/1000,3)} kg</td><td>Số bao bì</td><td class="n">${c.bags} × ${fmtBi(s.biMoiBao||0)} kg = ${fmt(c.tare/1000,3)} kg</td></tr>
       <tr class="strong"><td>KL tịnh</td><td class="n">${fmt(c.net/1000,3)} kg</td><td>Tổng cộng</td><td class="n">${fmt(c.money,2)} ₫</td></tr>
     </table>` : `<div class="pp-cont">${esc(s.ten||'Phiếu cân')} — tiếp theo</div>`;
   const body = blocks.map(([vals,b,baos])=>blockHTML(vals,b,baos)).join('');
