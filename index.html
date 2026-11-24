@@ -1158,7 +1158,11 @@ else dl = { save: async ({filename, data}) => {   // iPhone / web: mở bảng c
     }
   } else dlA();
 } };
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { navigator.serviceWorker.register('sw.js', {updateViaCache:'none'}).then(r=>r.update()).catch(()=>{});
+  // Có bản mới: tự tải lại trang 1 lần để dùng ngay (chỉ khi đã có bản cũ đang chạy)
+  const hadSW = !!navigator.serviceWorker.controller; let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{ if (hadSW && !reloaded){ reloaded = true; location.reload(); } });
+  document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState==='visible') navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); }); }
 window.__back = () => { for (const id of ['imp','sync']){ const m = $(id); if (m && !m.hidden){ id==='sync' ? closeSync() : (m.hidden = true); return true; } } if (view !== 'list'){ editIdx=-1; nextBao=null; setView('list'); return true; } return false; };
 // ---- khởi động ----
 slips = lsLoad(); render(); setView('list');   // mở sổ mặc định ở tab Tổng hợp
